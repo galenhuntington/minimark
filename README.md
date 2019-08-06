@@ -1,4 +1,4 @@
-==  Minimark
+##  Minimark
 
 This is still mostly a personal project, or perhaps a work in progress
 with minimal documentation.
