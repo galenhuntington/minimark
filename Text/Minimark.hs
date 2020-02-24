@@ -91,7 +91,7 @@ markup :: Text -> [Node]
          -- (some spaceChar <|> (eof *> mempty)))
 
 inlineTags :: Set Text
-''  = Set.fromList ["a", "u", "i", "span", "p", "__", "no-p"]
+''  = Set.fromList ["a", "u", "i", "span", "p", "__", "no-para"]
 
 --  Needs some factoring.
 paraize :: [Node] -> [Node]
@@ -123,11 +123,14 @@ paraize :: [Node] -> [Node]
    loop (Just ns) (x : l) = loop (Just $ ns <> [x]) l
    wrap ns = Element "para" [] $ ns
 
+marklessTags :: Set Text
+''  = Set.fromList ["no-mark", "style", "script"]
+
 markupNode :: Node -> [Node]
 ''  (TextNode t) = mergeNodes $ markup t
 ''  e@(Element t a ns)
-   | t == "no-mark" = [e]
-   |                = [Element t a $ foldMap markupNode $ ns]
+   | t `elem` marklessTags = [e]
+   |                       = [Element t a $ foldMap markupNode $ ns]
 ''  n  = [n]
 
 minimarkNodes :: [Node] -> [Node]
