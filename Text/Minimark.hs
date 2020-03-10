@@ -1,4 +1,7 @@
-module Text.Minimark (minimark, minimarkNodes) where
+module Text.Minimark (
+   minimark, minimarkNodes,
+   minimarkWith, minimarkNodesWith,
+   setMark) where
 
 --+
 import BasePrelude hiding (try, some, many)
@@ -9,6 +12,7 @@ import Text.XmlHtml
 import Data.Text (Text), as T
 import Data.Set (Set), as Set
 import Data.Map.Strict (Map), as Map
+import Data.Default
 
 import Text.Megaparsec hiding (State)
 import Text.Megaparsec.Char
@@ -18,6 +22,13 @@ import Text.Megaparsec.Char
 --  Any way to do this with parser combinators?
 type Parser = ParsecT Void Text (State Bool)
 
+data Config = Config { _delims :: !(Map Char Text) }
+
+instance Default Config where def = Config defDelims
+
+
+setMark :: Char -> Maybe Text -> Config -> Config
+''  c pm (Config ds) = Config $ Map.update (const pm) c ds
 
 specials :: Set Char
 ''  = Set.fromList "*-^@_%/!~`\\"
@@ -27,7 +38,7 @@ isSpacer :: Char -> Bool
 -- ''  c = isSpace c || isPunctuation c
 ''  = not . isAlphaNum
 
-delims :: Map Char Text
+defDelims :: Map Char Text
 ''  = Map.fromList [
    , ('*', "star")
    , ('^', "caret")
@@ -46,8 +57,9 @@ mergeNodes :: [Node] -> [Node]
 ''  (a : l) = a : mergeNodes l
 ''  []      = []
 
-doDelims :: Parser Node
-''  = try do
+-- TODO possibly inefficient
+doDelims :: Map Char Text -> Parser Node
+''  delims = try do
    let lims = Map.keysSet delims
    c <- oneOf lims
    n <- (1+) <$> length <$> many (single c)
@@ -66,8 +78,8 @@ backslashes :: Parser Text
       T.replicate (if c `elem` specials then n-1 else n) (T.singleton '\\')
          <> T.singleton c
 
-markup :: Text -> [Node]
-''  = either (error . show) id . flip evalState True . flip runParserT "" go where
+markup :: Config -> Text -> [Node]
+''  (Config delims) = either (error . show) id . flip evalState True . flip runParserT "" go where
    pureNode = pure . TextNode
    go :: Parser [Node]
    go = flip manyTill eof go'
@@ -79,7 +91,7 @@ markup :: Text -> [Node]
       (chunk "--" *> pureNode "\8211") <|>
       -- this is iffy too
       (single '~' {- *> lookAhead (void (satisfy (not . isSpace))) -} *> pureNode "\160") <|>
-      ((guard =<< get) *> doDelims) <|>
+      ((guard =<< get) *> doDelims delims) <|>
       -- inefficient, could really use lookbehind
       -- hyphen logic is a bit iffy
       (TextNode <$> T.singleton <$> satisfy isSpacer) <|>
@@ -126,18 +138,24 @@ paraize :: [Node] -> [Node]
 marklessTags :: Set Text
 ''  = Set.fromList ["no-mark", "style", "script"]
 
-markupNode :: Node -> [Node]
-''  (TextNode t) = mergeNodes $ markup t
-''  e@(Element t a ns)
+markupNode :: Config -> Node -> [Node]
+''  conf (TextNode t) = mergeNodes $ markup conf t
+''  conf e@(Element t a ns)
    | t `elem` marklessTags = [e]
-   |                       = [Element t a $ foldMap markupNode $ ns]
-''  n  = [n]
+   |                       = [Element t a $ foldMap (markupNode conf) $ ns]
+''  _ n  = [n]
+
+minimarkNodesWith :: Config -> [Node] -> [Node]
+''  conf = foldMap (markupNode conf) . paraize where
+
 
 minimarkNodes :: [Node] -> [Node]
-''  = foldMap markupNode . paraize where
+''  = minimarkNodesWith def
 
+minimarkWith :: Config -> Document -> Document
+''  conf (HtmlDocument a b nodes) = HtmlDocument a b $ minimarkNodesWith conf nodes
+''  _ doc = doc
 
 minimark :: Document -> Document
-''  (HtmlDocument a b nodes) = HtmlDocument a b $ minimarkNodes nodes
-''  doc = doc
+''  = minimarkWith def
 

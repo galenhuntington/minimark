@@ -10,6 +10,5 @@ import Text.Minimark (minimark)
 
 main = do
    val <- either (error . show) id <$> parseHTML "" <$> B.getContents
-   print val
    BL.putStr $ toLazyByteString $ render $ minimark $ val
 
