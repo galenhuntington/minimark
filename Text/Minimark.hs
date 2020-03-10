@@ -1,7 +1,7 @@
 module Text.Minimark (
    minimark, minimarkNodes,
    minimarkWith, minimarkNodesWith,
-   setMark) where
+   setMark, Config(..)) where
 
 --+
 import BasePrelude hiding (try, some, many)
@@ -45,7 +45,7 @@ defDelims :: Map Char Text
    , ('@', "at")
    , ('_', "underscore")
    , ('%', "percent")
-   , ('/', "slash")
+   -- , ('/', "slash")
    , ('!', "bang")
    , ('`', "backtick")
    ]
@@ -145,8 +145,21 @@ markupNode :: Config -> Node -> [Node]
    |                       = [Element t a $ foldMap (markupNode conf) $ ns]
 ''  _ n  = [n]
 
+markupNodes :: Config -> [Node] -> [Node]
+''  conf = go where
+   go (node : rest) = case node of
+      TextNode t -> (mergeNodes $ markup conf t) <> go rest
+      Element "set-mark" a []
+         | Just [c] <- fmap T.unpack $ lookup "char" a
+            -> markupNodes (setMark c (lookup "prefix" a) conf) rest
+      e@(Element t a ns)
+         | t `elem` marklessTags -> e : go rest
+         |                       -> Element t a (markupNodes conf ns) : go rest
+      _ -> node : go rest
+   go _ = []
+
 minimarkNodesWith :: Config -> [Node] -> [Node]
-''  conf = foldMap (markupNode conf) . paraize where
+''  conf = markupNodes conf . paraize where
 
 
 minimarkNodes :: [Node] -> [Node]
