@@ -28,10 +28,10 @@ instance Default Config where def = Config defDelims
 
 
 setMark :: Char -> Maybe Text -> Config -> Config
-''  c pm (Config ds) = Config $ Map.update (const pm) c ds
+''  c pm (Config ds) = Config $ Map.alter (const pm) c ds
 
-specials :: Set Char
-''  = Set.fromList "*-^@_%/!~`\\"
+builtins :: Set Char
+''  = Set.fromList "-~\\"
 
 --  Characters that can be used near a delimiter.
 isSpacer :: Char -> Bool
@@ -47,7 +47,7 @@ defDelims :: Map Char Text
    , ('%', "percent")
    -- , ('/', "slash")
    , ('!', "bang")
-   , ('`', "backtick")
+   , ('`', "tick")
    ]
 
 --  Make more efficient one day.
@@ -70,8 +70,8 @@ doDelims :: Map Char Text -> Parser Node
    lookAhead (void (satisfy isSpacer) <|> eof)
    return $ Element ((delims Map.! c) <> T.pack (show n)) mempty [TextNode cont]
 
-backslashes :: Parser Text
-''  = do
+backslashes :: Set Char -> Parser Text
+''  specials = do
    n <- length <$> some (char '\\')
    c <- anySingle
    pure $
@@ -81,12 +81,13 @@ backslashes :: Parser Text
 markup :: Config -> Text -> [Node]
 ''  (Config delims) = either (error . show) id . flip evalState True . flip runParserT "" go where
    pureNode = pure . TextNode
+   specials = builtins <> Map.keysSet delims
    go :: Parser [Node]
    go = flip manyTill eof go'
      where
      go' :: Parser Node
      go' =
-      (TextNode <$> backslashes) <|>
+      (TextNode <$> backslashes specials) <|>
       (chunk "---" *> pureNode "\8212") <|>
       (chunk "--" *> pureNode "\8211") <|>
       -- this is iffy too
