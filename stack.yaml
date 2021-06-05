@@ -1,9 +1,9 @@
-resolver: lts-17.4
+resolver: lts-17.14
 system-ghc: true
 compiler-check: newer-minor
 
 extra-deps:
-   - xmlhtml-0.2.5.2@sha256:0e9ada870a5c5c7d522ed8444bef0f9f0e1587e31a5881f15a5f9cdd983af8b4
+   - xmlhtml-0.2.5.2@sha256:3f0990f725551985d777e8edb5563fe99aee998f1fde6a7633f720f76df54701,46997
    - git: git@github.com:galenhuntington/hpre
-     commit: e0d603989b018c664d955a370c0b4dfcd62a9d0d
+     commit: f4c0993b3fcc6b776f680ef9d01b92971d37b745
 

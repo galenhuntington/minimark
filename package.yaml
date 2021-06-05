@@ -20,16 +20,16 @@ executable:
    main: main.hs
 
 build-tools:
-   hpre: 1.*
+   - hpre
 
 dependencies:
-   base: ">= 4.9 && < 5"
-   base-prelude: 1.4.*
-   bytestring: 0.10.*
-   containers: 0.6.*
-   megaparsec: 9.*
-   mtl: 2.2.*
-   text: 1.2.*
-   xmlhtml: 0.2.*
-   data-default: 0.7.*
+   - base
+   - base-prelude
+   - bytestring
+   - containers
+   - megaparsec
+   - mtl
+   - text
+   - xmlhtml
+   - data-default
 
