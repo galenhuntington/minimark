@@ -5,7 +5,7 @@ with minimal documentation.
 
 Minimark is intended to be used with an HTML macro or templating
 system, where tags can be defined to expand to other HTML.  It is
-similar to Markdown, but defined more simply and more flexible.
+similar to Markdown, but defined more simply and far more flexibly.
 
 Minimark translates some punctuation marks around simple text to tags.
 E.g., `**bold**` expands to `<star2>bold</star2>`.  There is no

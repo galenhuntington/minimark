@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.33.0.
+-- This file has been generated from package.yaml by hpack version 0.34.4.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 191e9600555d0dda17738498d0e39c3242d3119aa13b3c6a744bcfcfc547a97a
+-- hash: 7a7512bd4545c4f6e84493eb1999df10226ab7cf77786396e5ffedecb83e8b2a
 
 name:           minimark
 version:        0.6.1
@@ -21,8 +21,11 @@ library
   other-modules:
       Paths_minimark
   hs-source-dirs:
-      ./.
-  default-extensions: BlockArguments NoImplicitPrelude OverloadedStrings
+      ./
+  default-extensions:
+      BlockArguments
+      NoImplicitPrelude
+      OverloadedStrings
   ghc-options: -pgmF hpre -F
   build-tool-depends:
       hpre:hpre
@@ -44,8 +47,11 @@ executable minimark
       Text.Minimark
       Paths_minimark
   hs-source-dirs:
-      ./.
-  default-extensions: BlockArguments NoImplicitPrelude OverloadedStrings
+      ./
+  default-extensions:
+      BlockArguments
+      NoImplicitPrelude
+      OverloadedStrings
   ghc-options: -pgmF hpre -F
   build-tool-depends:
       hpre:hpre
