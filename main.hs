@@ -1,8 +1,8 @@
---+
+
 import BasePrelude
 
-import Data.ByteString as B
-import Data.ByteString.Lazy as BL
+import qualified Data.ByteString as B
+import qualified Data.ByteString.Lazy as BL
 import Data.ByteString.Builder
 
 import Text.XmlHtml

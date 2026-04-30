@@ -3,15 +3,17 @@ module Text.Minimark (
    minimarkWith, minimarkNodesWith,
    setMark, Config(..)) where
 
---+
 import BasePrelude hiding (try, some, many)
 import Control.Monad.State.Strict
 
 import Text.XmlHtml
 
-import Data.Text (Text), as T
-import Data.Set (Set), as Set
-import Data.Map.Strict (Map), as Map
+import Data.Text (Text)
+import qualified Data.Text as T
+import Data.Set (Set)
+import qualified Data.Set as Set
+import Data.Map.Strict (Map)
+import qualified Data.Map.Strict as Map
 import Data.Default
 
 import Text.Megaparsec hiding (State)
@@ -28,19 +30,19 @@ instance Default Config where def = Config defDelims
 
 
 setMark :: Char -> Maybe Text -> Config -> Config
-''  c pm (Config ds) = Config $ Map.alter (const pm) c ds
+setMark c pm (Config ds) = Config $ Map.alter (const pm) c ds
 
 builtins :: Set Char
-''  = Set.fromList "-~\\"
+builtins = Set.fromList "-~\\"
 
 --  Characters that can be used near a delimiter.
 isSpacer :: Char -> Bool
 -- ''  c = isSpace c || isPunctuation c
-''  = not . isAlphaNum
+isSpacer = not . isAlphaNum
 
 defDelims :: Map Char Text
-''  = Map.fromList [
-   , ('*', "star")
+defDelims = Map.fromList [
+     ('*', "star")
    , ('^', "caret")
    , ('@', "at")
    , ('_', "underscore")
@@ -52,14 +54,14 @@ defDelims :: Map Char Text
 
 --  Make more efficient one day.
 mergeNodes :: [Node] -> [Node]
-''  (TextNode a : l) | T.null a = mergeNodes l
-''  (TextNode a : TextNode b : r) = mergeNodes $ TextNode (a <> b) : r
-''  (a : l) = a : mergeNodes l
-''  []      = []
+mergeNodes (TextNode a : l) | T.null a = mergeNodes l
+mergeNodes (TextNode a : TextNode b : r) = mergeNodes $ TextNode (a <> b) : r
+mergeNodes (a : l) = a : mergeNodes l
+mergeNodes []      = []
 
 -- TODO possibly inefficient
 doDelims :: Map Char Text -> Parser Node
-''  delims = try do
+doDelims delims = try do
    let lims = Map.keysSet delims
    c <- oneOf lims
    n <- (1+) <$> length <$> many (single c)
@@ -71,7 +73,7 @@ doDelims :: Map Char Text -> Parser Node
    return $ Element ((delims Map.! c) <> T.pack (show n)) mempty [TextNode cont]
 
 backslashes :: Set Char -> Parser Text
-''  specials = do
+backslashes specials = do
    n <- length <$> some (char '\\')
    c <- anySingle
    pure $
@@ -79,7 +81,7 @@ backslashes :: Set Char -> Parser Text
          <> T.singleton c
 
 markup :: Config -> Text -> [Node]
-''  (Config delims) = either (error . show) id . flip evalState True . flip runParserT "" go where
+markup (Config delims) = either (error . show) id . flip evalState True . flip runParserT "" go where
    pureNode = pure . TextNode
    specials = builtins <> Map.keysSet delims
    go :: Parser [Node]
@@ -104,11 +106,11 @@ markup :: Config -> Text -> [Node]
          -- (some spaceChar <|> (eof *> mempty)))
 
 inlineTags :: Set Text
-''  = Set.fromList ["a", "u", "i", "span", "p", "__", "no-para"]
+inlineTags = Set.fromList ["a", "u", "i", "span", "p", "__", "no-para"]
 
 --  Needs some factoring.
 paraize :: [Node] -> [Node]
-''  = loop Nothing where
+paraize = loop Nothing where
    loop :: Maybe [Node] -> [Node] -> [Node]
    loop Nothing [] = []
    loop (Just ns) [] = wrap ns : []
@@ -131,23 +133,23 @@ paraize :: [Node] -> [Node]
                      (i_, l_) = (init r', last r')
                      mid = map (wrap . (:[]) . TextNode) $ filter (not . T.null) i_
                      cont | l_ `elem` ["", "\n"] = Nothing
-                          |                      = Just [TextNode l_]
+                          | True                 = Just [TextNode l_]
                  in wrap (ns <> (if T.null t then [] else [TextNode t'])) : mid <> loop cont l
    loop (Just ns) (x : l) = loop (Just $ ns <> [x]) l
    wrap ns = Element "para" [] $ ns
 
 marklessTags :: Set Text
-''  = Set.fromList ["no-mark", "style", "script"]
+marklessTags = Set.fromList ["no-mark", "style", "script"]
 
 markupNode :: Config -> Node -> [Node]
-''  conf (TextNode t) = mergeNodes $ markup conf t
-''  conf e@(Element t a ns)
+markupNode conf (TextNode t) = mergeNodes $ markup conf t
+markupNode conf e@(Element t a ns)
    | t `elem` marklessTags = [e]
-   |                       = [Element t a $ foldMap (markupNode conf) $ ns]
-''  _ n  = [n]
+   | True                  = [Element t a $ foldMap (markupNode conf) $ ns]
+markupNode _ n  = [n]
 
 markupNodes :: Config -> [Node] -> [Node]
-''  conf = go where
+markupNodes conf = go where
    go (node : rest) = case node of
       TextNode t -> (mergeNodes $ markup conf t) <> go rest
       Element "set-mark" a []
@@ -155,21 +157,21 @@ markupNodes :: Config -> [Node] -> [Node]
             -> markupNodes (setMark c (lookup "prefix" a) conf) rest
       e@(Element t a ns)
          | t `elem` marklessTags -> e : go rest
-         |                       -> Element t a (markupNodes conf ns) : go rest
+         | True                  -> Element t a (markupNodes conf ns) : go rest
       _ -> node : go rest
    go _ = []
 
 minimarkNodesWith :: Config -> [Node] -> [Node]
-''  conf = markupNodes conf . paraize where
+minimarkNodesWith conf = markupNodes conf . paraize where
 
 
 minimarkNodes :: [Node] -> [Node]
-''  = minimarkNodesWith def
+minimarkNodes = minimarkNodesWith def
 
 minimarkWith :: Config -> Document -> Document
-''  conf (HtmlDocument a b nodes) = HtmlDocument a b $ minimarkNodesWith conf nodes
-''  _ doc = doc
+minimarkWith conf (HtmlDocument a b nodes) = HtmlDocument a b $ minimarkNodesWith conf nodes
+minimarkWith _ doc = doc
 
 minimark :: Document -> Document
-''  = minimarkWith def
+minimark = minimarkWith def
 
