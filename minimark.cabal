@@ -1,13 +1,7 @@
-cabal-version: 1.12
-
--- This file has been generated from package.yaml by hpack version 0.38.3.
---
--- see: https://github.com/sol/hpack
---
--- hash: 103744e6fa11131eee8ef663e05e3a2e8ff014305f648d423fcc633b3a2e8291
+cabal-version: 2.2
 
 name:           minimark
-version:        0.7.0
+version:        0.7.1
 synopsis:       Simple mark-up for HTML.
 category:       Web
 author:         Galen Huntington <galen.huntington@gmail.com>
@@ -15,48 +9,32 @@ maintainer:     Galen Huntington <galen.huntington@gmail.com>
 license:        MIT
 build-type:     Simple
 
-library
-  exposed-modules:
-      Text.Minimark
-  other-modules:
-      Paths_minimark
-  hs-source-dirs:
-      ./
-  default-extensions:
-      BlockArguments
-      NoImplicitPrelude
-      OverloadedStrings
-  build-depends:
-      base
-    , base-prelude
-    , bytestring
-    , containers
-    , data-default
-    , megaparsec
-    , mtl
-    , text
-    , xmlhtml
+common shared
+  hs-source-dirs: .
   default-language: Haskell2010
+  default-extensions:
+    BlockArguments
+    NoImplicitPrelude
+    OverloadedStrings
+  build-depends:
+   , base
+   , base-prelude
+   , bytestring
+   , containers
+   , data-default
+   , megaparsec
+   , mtl
+   , text
+   , xmlhtml
+
+library
+  import: shared
+  exposed-modules:
+    Text.Minimark
 
 executable minimark
+  import: shared
   main-is: main.hs
   other-modules:
-      Text.Minimark
-      Paths_minimark
-  hs-source-dirs:
-      ./
-  default-extensions:
-      BlockArguments
-      NoImplicitPrelude
-      OverloadedStrings
-  build-depends:
-      base
-    , base-prelude
-    , bytestring
-    , containers
-    , data-default
-    , megaparsec
-    , mtl
-    , text
-    , xmlhtml
-  default-language: Haskell2010
+    Text.Minimark
+
